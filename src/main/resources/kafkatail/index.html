@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Unfiltered WebSockets</title>
+    <style type="text/css">
+      * { margin:0; padding:0; }
+      body { font-size: 24px; font-family:helvetica, sans serif; padding:1em; color:#333; }
+      input[type='text'] { font-size:24px; } #debug { font-size:16px; color:#ccc; }
+      ul { list-style:none; }
+      .who { color:#FF00C3; }
+    </style>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+	<link href="//netdna.bootstrapcdn.com/bootswatch/3.0.0/slate/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body ng-app="kafkatail">
+    ws://localhost:5679/
+
+	<div class="container" ng-controller="test">
+
+<input type="text" ng-model="topic">
+<div class="btn" ng-click="addTopic(topic)">Add</div>
+
+<div ng-repeat="t in topics">
+<h3>{{t.name}}</h3>
+<ul ng-repeat="m in t.msg">
+<li>{{m}}</li>
+</ul>
+</div>
+	</div>
+
+    <script type="text/javascript">
+	  var app = angular.module("kafkatail",[]);
+	</script>
+   <script type="text/javascript" src="scripts/socketService.js"></script>
+  <script type="text/javascript" src="scripts/app.js"></script>
+
+	</script>
+  </body>
+</html>
