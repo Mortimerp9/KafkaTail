@@ -9,9 +9,9 @@ angular.module("kafkatail")
 												  var topic = msg[0];
 												  var m = msg[1];
 												  if($scope.topics[topic]) {
-													  $scope.topics[topic].msg.push(m);
+													  $scope.topics[topic].msg = _.rest($scope.topics[topic].msg, 50).push(m);
 												  }
-												  });
+											  });
 										  });
 
 							 $scope.addTopic = function(topic) {

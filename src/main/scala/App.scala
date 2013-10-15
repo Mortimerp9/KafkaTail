@@ -71,7 +71,6 @@ object App {
                 st.add(topic, new KafkaTopic(topic, {
                   msg =>
                     val txt = Utils.toString(msg.payload, "UTF-8")
-                    println(txt)
                     s.send("%s|%s".format(topic,txt))
                 }))
               case _ =>
@@ -99,7 +98,6 @@ object App {
     }
 
     val root = this.getClass.getResource("kafkatail/")
-    println(root)
     unfiltered.netty.Http(8000)
       .resources(root) //whatever is not matched by our filter will be served from the resources folder (html, css, ...)
       .run(websock)
