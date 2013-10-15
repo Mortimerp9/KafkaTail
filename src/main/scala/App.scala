@@ -5,10 +5,10 @@ import kafka.utils.Utils
 import unfiltered.netty.Http
 import collection.JavaConverters._
 
-class KafkaTopic(topic: String, func: kafka.message.Message => Unit) {
+class KafkaTopic(zk: String, topic: String, func: kafka.message.Message => Unit) {
   // specify some consumer properties
   val props = new Properties()
-  props.put("zk.connect", "dzk0,dzk1,dzk2")
+  props.put("zk.connect", zk)
   props.put("zk.connectiontimeout.ms", "1000000")
   props.put("groupid", "kafkatail")
 
@@ -50,11 +50,15 @@ object App {
     def add(topic: String, kafka: KafkaTopic) {
       topicMap.put(topic, kafka)
     }
+    def remove(topic: String) {
+      topicMap.get(topic).foreach(_.shutdown())
+    }
   }
 
-  val AddReg = "add\\|(.*)".r
+  val AddReg = "(.*)\\|(.*)".r
 
   def main(args: Array[String]) {
+    require(args.length > 0, "missing Zookeeper connection details")
     val sockets: ConcurrentMap[Int, SocketTopic] =
       new java.util.concurrent.ConcurrentHashMap[Int, SocketTopic].asScala
 
@@ -64,16 +68,25 @@ object App {
           case Open(s) =>
             sockets += (s.channel.getId.intValue -> SocketTopic(s))
             s.send("sys|hola!")
-          case Message(s, Text(AddReg(topic))) =>
-            sockets.get(s.channel.getId.intValue) foreach {
-              case st@SocketTopic(_, topicMap) if !topicMap.contains(topic) =>
-                println("adding %s to topics".format(topic))
-                st.add(topic, new KafkaTopic(topic, {
-                  msg =>
-                    val txt = Utils.toString(msg.payload, "UTF-8")
-                    s.send("%s|%s".format(topic,txt))
-                }))
-              case _ =>
+          case Message(s, Text(AddReg(command, topic))) =>
+            command match {
+              case "add" =>
+                sockets.get(s.channel.getId.intValue) foreach {
+                  case st@SocketTopic(_, topicMap) if !topicMap.contains(topic) =>
+                    println("adding %s to topics".format(topic))
+                    st.add(topic, new KafkaTopic(args(0), topic, {
+                      msg =>
+                        val txt = Utils.toString(msg.payload, "UTF-8")
+                        s.send("%s|%s|%s".format(topic, System.currentTimeMillis, txt))
+                    }))
+                  case _ =>
+                }
+              case "remove" =>
+                sockets.get(s.channel.getId.intValue) foreach {
+                  case st: SocketTopic =>
+                    println("removing %s".format(topic))
+                    st.remove(topic)
+                }
             }
           case Close(s) =>
             sockets.get(s.channel.getId.intValue) match {

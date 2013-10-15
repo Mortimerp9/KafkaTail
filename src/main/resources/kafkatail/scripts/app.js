@@ -7,12 +7,21 @@ angular.module("kafkatail")
 											  $scope.$apply(function() {
 												  var msg = e.data.split("|");
 												  var topic = msg[0];
-												  var m = msg[1];
+												  var m = {timestamp: parseInt(msg[1]),
+														   data: msg[2]};
 												  if($scope.topics[topic]) {
-													  $scope.topics[topic].msg = _.rest($scope.topics[topic].msg, 50).push(m);
+													  var rest =  _.last($scope.topics[topic].msg, 50);
+													  rest.push(m);
+													  $scope.topics[topic].msg = rest;
 												  }
 											  });
 										  });
+
+							 $scope.removeTopic = function(topic) {
+								 console.log("remove", topic);
+								 delete $scope.topics[topic];
+								 socket.send("remove|"+topic);
+							 };
 
 							 $scope.addTopic = function(topic) {
 								 console.log("add",topic);

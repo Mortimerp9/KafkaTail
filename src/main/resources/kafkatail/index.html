@@ -1,40 +1,61 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Unfiltered WebSockets</title>
-    <style type="text/css">
-      * { margin:0; padding:0; }
-      body { font-size: 24px; font-family:helvetica, sans serif; padding:1em; color:#333; }
-      input[type='text'] { font-size:24px; } #debug { font-size:16px; color:#ccc; }
-      ul { list-style:none; }
-      .who { color:#FF00C3; }
-    </style>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.2.1/lodash.min.js"></script>
+    <title>Kafka Tail</title>
 	<link href="//netdna.bootstrapcdn.com/bootswatch/3.0.0/slate/bootstrap.min.css" rel="stylesheet">
+	<style>
+	  td.timestamp, th.timestamp {width: 150px;}
+	  .message.ng-enter,
+	  .message.ng-leave {
+	  -webkit-transition:0.5s linear all;
+	  -moz-transition:0.5s linear all;
+	  -o-transition:0.5s linear all;
+	  transition:0.5s linear all;
+	  }
+	  
+	  .message.ng-enter,
+	  .message.ng-leave.ng-leave-active {
+	  opacity:0;
+	  }
+	  .message.ng-leave,
+	  .message.ng-enter.ng-enter-active {
+	  opacity:1;
+	  }
+	  .badge-danger {
+	  background-color: #d9534f;
+	  }
+	</style>
+	<script src="http://code.angularjs.org/1.2.0-rc.2/angular.min.js"></script>
+	<script src="http://code.angularjs.org/1.2.0-rc.2/angular-animate.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.2.1/lodash.min.js"></script>
   </head>
   <body ng-app="kafkatail">
-    ws://localhost:5679/
 
 	<div class="container" ng-controller="test">
 
-<input type="text" ng-model="topic">
-<div class="btn" ng-click="addTopic(topic)">Add</div>
+	  <form>
+		<label for="topic">Topic</label>
+		<input type="text" id="topic" ng-model="topic">
+		<div class="btn" ng-click="addTopic(topic)">Add</div>
+	  </form>
 
-<div ng-repeat="t in topics">
-<h3>{{t.name}}</h3>
-<ul ng-repeat="m in t.msg">
-<li>{{m}}</li>
-</ul>
-</div>
+	  <div ng-repeat="t in topics">
+		<h3>{{t.name}} <span class="badge badge-danger" ng-click="removeTopic(t.name)">X</span></h3>
+		<table class="table table-striped">
+		  <thead>
+			<tr><th class="timestamp">Timestamp</th><th>Message</th></tr>
+		  </thead>
+		  <tbody>
+			<tr class="message" ng-repeat="m in t.msg | orderBy:'timestamp':true"><td class="timestamp">{{m.timestamp}}</td><td>{{m.data}}</td></tr>
+		  </tbody>
+		</table>
+	  </div>
 	</div>
 
     <script type="text/javascript">
-	  var app = angular.module("kafkatail",[]);
+	  var app = angular.module("kafkatail",["ngAnimate"]);
 	</script>
-   <script type="text/javascript" src="scripts/socketService.js"></script>
-  <script type="text/javascript" src="scripts/app.js"></script>
-
-	</script>
+	<script type="text/javascript" src="scripts/socketService.js"></script>
+	<script type="text/javascript" src="scripts/app.js"></script>
   </body>
 </html>
